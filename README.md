@@ -2,7 +2,7 @@
 
 When it comes to Zsh scripting, a lot of attention is paid to files and the file system, but it's much harder to find good documentation around string manipulation. Information about Zsh strings gets buried in the docs obscurely labeled [Parameter Expansion][1] or [Modifiers][2]. The [Fish Shell][fish] shell does a way better job with documentation, and has a handy [string][fish-string] command that covers most of the things you'd ever want to do with strings.
 
-This project aims to use Fish's `string` command to teaching tool to show how to accomplish the same functionality in Zsh. You don't necessarily need these Fish functions in Zsh, but they serve as a good tool to show you how you could do all the same things in Zsh.
+This project aims to use Fish's `string` command as a template for building Zsh string functions. You don't necessarily need these Fish functions in Zsh, but they serve as a good tool to show you how Zsh accomplishes all the same things.
 
 ## Tests
 
@@ -32,7 +32,7 @@ In Zsh you get the length of strings using the `$#var` syntax like so:
 %
 ```
 
-Fish handles this with the [string-length] command. If you like how Fish does things, you can also easily accomplish the same functionality in Zsh with a simple function:
+Fish handles this with the [string length][string-length] command. If you like how Fish does things, you can also easily accomplish the same functionality in Zsh with a simple function:
 
 ```zsh
 #string.zsh
@@ -111,7 +111,7 @@ aAa bBb cCc AaA
 %
 ```
 
-Fish handles changing case with the [string-lower] and [string-upper] commands. If you like how Fish does things, you can also easily accomplish the same functionality in Zsh with these simple functions:
+Fish handles changing case with the [string lower][string-lower] and [string upper][string-upper] commands. If you like how Fish does things, you can also easily accomplish the same functionality in Zsh with these simple functions:
 
 ```zsh
 #string.zsh
@@ -154,7 +154,7 @@ abc
 
 ## Joining strings
 
-Fish handles joining strings with the [string-join] and [string-join0] commands. In Zsh you can join strings with a separator using the `j` [parameter expansion flag][2].
+Fish handles joining strings with the [string join][string-join] and [string join0][string-join0] commands. In Zsh you can join strings with a separator using the `j` [parameter expansion flag][2].
 
 ```zsh
 $ words=(abc def ghi)
@@ -242,7 +242,7 @@ lmnopqrstuvw
 %
 ```
 
-Fish handles this with the [string-sub] command. You can easily accomplish something similar in Zsh with your own version of this function:
+Fish handles this with the [string sub][string-sub] command. You can easily accomplish something similar in Zsh with your own version of this function:
 
 ```zsh
 #string.zsh
@@ -341,7 +341,7 @@ abc...
 %
 ```
 
-Fish handles this with the [string-pad] command. You can easily accomplish the same thing in Zsh with your own version of this function:
+Fish handles this with the [string pad][string-pad] command. You can easily accomplish the same thing in Zsh with your own version of this function:
 
 ```zsh
 #string.zsh
