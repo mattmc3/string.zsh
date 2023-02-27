@@ -152,6 +152,68 @@ abc
 %
 ```
 
+## Joining strings
+
+Fish handles joining strings with the [string-join] and [string-join0] commands. In Zsh you can join strings with a separator using the `j` [parameter expansion flag][2].
+
+```zsh
+$ words=(abc def ghi)
+$ sep=:
+$ echo ${(pj.$sep.)words}
+abc:def:ghi
+$
+```
+
+A common join seperator is the null character (`$'\0'`). Many shell utilities will generate null separated data. For example, `find` does this with the `-print0` option.
+
+_Note: Since the null character isn't viewable, I'll need replace it in the following examples using `| tr '\0' '0'` so it's visible for the purpose of demonstration._
+
+```zsh
+% find . -maxdepth 1 -type f -name '*.zsh' -print0 | tr '\0' '0' && echo
+./string.zsh0./string.plugin.zsh0
+%
+```
+
+Fish includes a [`join0`][fish-join0] command, which is just a special case of `join` with the null character as a separator, but with one notable exception; the result ends with a null character as well. In Zsh, we can accomplish this simply by adding an empty element to the end of whatever list we're joining.
+
+```zsh
+$ words=(abc def ghi '')
+$ nul=$'\0'
+$ echo ${(pj.$nul.)words} | tr '\0' '0'
+abc0def0ghi0
+$
+```
+
+If you like how Fish does things, you can also easily accomplish the same functionality in Zsh with these simple functions:
+
+```zsh
+#string.zsh
+##? string-join - join strings with delimiter
+##? usage: string join SEP [STRING...]
+function string-join {
+  (( $# )) || return 1
+  local sep=$1; shift
+  echo ${(pj.$sep.)@}
+}
+
+##? string-join0 - join strings with null character
+##? usage: string join0 [STRING...]
+function string-join0 {
+  (( $# )) || return 1
+  string-join $'\0' "$@" ''
+}
+```
+
+Now we also have proper `join` commands in Zsh.
+
+```zsh
+% string join '/' a b c
+a/b/c
+% string join0 x y z | tr '\0' '0'
+x0y0z0
+%
+```
+
 ## Substrings
 
 Unfortunately, like many areas of Zsh, there are multiple diffent ways to get a substring in Zsh. Zsh also refers to substrings as 'parameter subscripting', which makes it difficult to find in the docs.

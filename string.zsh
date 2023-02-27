@@ -30,6 +30,21 @@ function string-upper {
   done
 }
 
+##? string-join - join strings with delimiter
+##? usage: string join SEP [STRING...]
+function string-join {
+  (( $# )) || return 1
+  local sep=$1; shift
+  echo ${(pj.$sep.)@}
+}
+
+##? string-join0 - join strings with null character
+##? usage: string join0 [STRING...]
+function string-join0 {
+  (( $# )) || return 1
+  string-join $'\0' "$@" ''
+}
+
 ##? string-sub - extract substrings
 ##? usage: string sub [-s start] [-e end] [STRINGS...]
 function string-sub {
