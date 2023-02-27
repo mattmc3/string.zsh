@@ -453,6 +453,39 @@ string: Subcommand 'foo' is not valid.
 
 ## Additional notes
 
+### Fish's `--quiet` flag
+
+Many of Fish's `string` commands include a `-q | --quiet` flag to suppress output. None of our examples here do that because in a POSIX shell, like Zsh, the preferred method for suppressing stdin is simply redirecting it to `/dev/null` like so:
+
+```zsh
+% echo "Secret message" >/dev/null
+%
+```
+
+Fish also lets you add `>/dev/null` to commands, but it includes the quiet flag too. For the purposed of this demo, it's unnecessary complexity to support a `-q` flag in nearly every command when there's a preferred alternative.
+
+### Fish's `string collect`
+
+We didn't show an example of writing a [`string-collect`](string-collect) function because that may be needed for Fish, but not Zsh.
+
+However, for completeness, it's worth noting that you can already collect multi-line input into a variable. You can also collect it into an array by combining the `@` and `f` expansion flags in Zsh like so:
+
+```zsh
+% str=$(echo "one\ntwo\nthree")
+% echo $str
+one
+two
+three
+% arr=( ${(@f)str} )
+% echo $#arr
+3
+% printf '[%s]\n' $arr
+[one]
+[two]
+[three]
+%
+```
+
 ### zparseopts
 
 To parse option arguments, many of these scripts use the `zparseopts` builtin. You will see this pattern throughout this doc:
