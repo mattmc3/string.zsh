@@ -21,7 +21,7 @@ With that said, here we need to handle test setup.
 %
 ```
 
-## string lengths
+## String lengths
 
 In Zsh you get the length of strings using the `$#var` syntax like so:
 
@@ -58,7 +58,7 @@ With this function you can now get string lengths similar to how Fish does it:
 %
 ```
 
-## changing case
+## Changing case
 
 In Zsh you can convert strings to upper or lower case using the `u` or `l` [modifiers][3], **OR** the `U` or `L` [parameter expansion flags][2]. Yep, you read that right - Zsh often has multiple different ways to do the same thing. AND it uses funny names for the syntax which makes it difficult to search for. AND it changes the case of the letters used depending on which syntax you use!
 
@@ -152,7 +152,7 @@ abc
 %
 ```
 
-## substrings
+## Substrings
 
 Unfortunately, like many areas of Zsh, there are multiple diffent ways to get a substring in Zsh. Zsh also refers to substrings as 'parameter subscripting', which makes it difficult to find in the docs.
 
@@ -260,7 +260,7 @@ ab
 %
 ```
 
-## string padding
+## String padding
 
 In Zsh you can left pad strings using the `l:expr::string1::string2:` syntax. Similarly, right padding is done by changing the leading `l` to an `r` like this `r:expr::string1::string2:`. This is described in the [Expansion Flags][2] section of the Zsh docs.
 
@@ -404,8 +404,8 @@ If you are not familiar with `zparseopts`, you can [read more in the docs][zpars
 
 - **delete (`-D`)** parsed options from `$@`.
 - **fail (`-F`)** if a bad option is passed by the user.
-- **keep (`-K`)** any options we've already set in the `$opts` associative array. An associative array is another name for a key/value dictionary.
-- use the **associative array opts (`-A opts`)** to store the parsed options.
+- **keep (`-K`)** any options we've already set in the `$opts` associative array. "Associative array" is another word for a key/value dictionary.
+- use the **associative array named 'opts' (`-A opts`)** to store the parsed options.
 
 ### Supported Zsh Version
 
