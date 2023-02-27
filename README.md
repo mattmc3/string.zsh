@@ -1,10 +1,12 @@
 # string.zsh
 
-When it comes to Zsh scripting, a lot of attention is paid to files and the file system, but it's much harder to find good documentation around string manipulation. Information about Zsh strings gets buried in docs obscurely labeled [Parameter Expansion][1] or [Modifiers][2]. The [Fish Shell][fish] shell does a way better job with documentation, and has a handy [string][fish-string] command that covers most of the things you'd ever want to do with strings. This project aims to use Fish's `string` command to teach how that same functionality works in Zsh, and also provides you with a similar string CLI using simple Zsh functions.
+When it comes to Zsh scripting, a lot of attention is paid to files and the file system, but it's much harder to find good documentation around string manipulation. Information about Zsh strings gets buried in the docs obscurely labeled [Parameter Expansion][1] or [Modifiers][2]. The [Fish Shell][fish] shell does a way better job with documentation, and has a handy [string][fish-string] command that covers most of the things you'd ever want to do with strings.
+
+This project aims to use Fish's `string` command to teaching tool to show how to accomplish the same functionality in Zsh. You don't necessarily need these Fish functions in Zsh, but they serve as a good tool to show you how you could do all the same things in Zsh.
 
 ## Tests
 
-This README is validated using the excellent [clitest] testing framework. Occassionally in this doc I will have to include some testing snippets. I will try to label them so you can skip those parts, and also avoid them being distracting or doing anything __magic__ in them. This doc is meant to contain all the actual code.
+This README is validated using the excellent [clitest] testing framework. Occassionally in this doc I will include some testing snippets. I will try avoid them being distracting or doing any __magic__ in them. This doc itself is meant to contain all the actual code you need, not have things buried away.
 
 Tests are run using the following command:
 
@@ -30,11 +32,11 @@ In Zsh you get the length of strings using the `$#var` syntax like so:
 %
 ```
 
-Fish handles this with the [string-length] command. You can easily accomplish the same thing in Zsh with your version of this function:
+Fish handles this with the [string-length] command. If you like how Fish does things, you can also easily accomplish the same functionality in Zsh with a simple function:
 
 ```zsh
 #string.zsh
-##? string-length print string lengths
+##? string-length - print string lengths
 ##? usage: string length [STRING...]
 function string-length {
   (( $# )) || return 1
@@ -45,7 +47,7 @@ function string-length {
 }
 ```
 
-With this function you can now get string lengths similar to how Fish does:
+With this function you can now get string lengths similar to how Fish does it:
 
 ```zsh
 % string-length '' a ab abc
@@ -240,7 +242,7 @@ Fish's [`string` command][fish-string] wraps all this functionality and handles 
 ##? string - manipulate strings
 function string {
   emulate -L zsh
-  setopt local_option
+  setopt local_options
   0=${(%):-%x}
 
   if [[ "$1" == (-h|--help) ]]; then
