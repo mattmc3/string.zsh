@@ -58,6 +58,100 @@ With this function you can now get string lengths similar to how Fish does it:
 %
 ```
 
+## changing case
+
+In Zsh you can convert strings to upper or lower case using the `u` or `l` [modifiers][3], **OR** the `U` or `L` [parameter expansion flags][2]. Yep, you read that right - Zsh often has multiple different ways to do the same thing. AND it uses funny names for the syntax which makes it difficult to search for. AND it changes the case of the letters used depending on which syntax you use!
+
+Here's how you use [modifiers][3] to change case:
+
+```zsh
+% str="AbCdEfGhIjKlMnOpQrStUvWxYz"
+% echo ${str:u}
+ABCDEFGHIJKLMNOPQRSTUVWXYZ
+% echo ${str:l}
+abcdefghijklmnopqrstuvwxyz
+%
+```
+
+If you forget and use the wrong case, your string will be wrong, which is why it's better to enclose your variables in curly braces when using modifiers:
+
+```zsh
+% # EPIC FAIL EXAMPLES:
+% # modifiers without curly braces may succeed in unexpected ways
+% echo $str:U
+AbCdEfGhIjKlMnOpQrStUvWxYz:U
+% # use curly braces when using modifiers:
+% echo ${str:U}  #=> --regex unrecognized modifier
+% # zsh: unrecognized modifier `U'
+%
+```
+
+Here's how you would use [parameter expansion flags][2] to change case:
+
+```zsh
+% str="AbCdEfGhIjKlMnOpQrStUvWxYz"
+% echo ${(U)str}
+ABCDEFGHIJKLMNOPQRSTUVWXYZ
+% echo ${(L)str}
+abcdefghijklmnopqrstuvwxyz
+%
+```
+
+Unfortunately, you won't be so lucky if you accidentally use the wrong case when you use parameter expansion flags, because the lowercase `u` is used to apply uniqueness to the result.
+
+```zsh
+% # EPIC FAIL EXAMPLES:
+% # modifiers without curly braces may succeed in unexpected ways
+% arr=(aAa bBb cCc AaA cCc)
+% echo ${(U)arr}
+AAA BBB CCC AAA CCC
+% # don't make a mistake here
+% echo ${(u)arr}
+aAa bBb cCc AaA
+%
+```
+
+Fish handles changing case with the [string-lower] and [string-upper] commands. If you like how Fish does things, you can also easily accomplish the same functionality in Zsh with these simple functions:
+
+```zsh
+#string.zsh
+##? string-lower - convert strings to lowercase
+##? usage: string lower [STRING...]
+function string-lower {
+  (( $# )) || return 1
+  local s
+  for s in "$@"; do
+    echo ${s:l}
+  done
+}
+
+##? string-upper - convert strings to uppercase
+##? usage: string upper [STRING...]
+function string-upper {
+  (( $# )) || return 1
+  local s
+  for s in "$@"; do
+    echo ${s:u}
+  done
+}
+```
+
+With these functions you can now get change string case similar to how Fish does it:
+
+```zsh
+% # upper case
+% string-upper A bb Abc
+A
+BB
+ABC
+% # lower case
+% string-lower A bb Abc
+a
+bb
+abc
+%
+```
+
 ## substrings
 
 Unfortunately, like many areas of Zsh, there are multiple diffent ways to get a substring in Zsh. Zsh also refers to substrings as 'parameter subscripting', which makes it difficult to find in the docs.

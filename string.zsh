@@ -1,12 +1,32 @@
 #!/usr/bin/env zsh
 
-##? string-length print string lengths
+##? string-length - print string lengths
 ##? usage: string length [STRING...]
 function string-length {
   (( $# )) || return 1
   local s
   for s in "$@"; do
     echo $#s
+  done
+}
+
+##? string-lower - convert strings to lowercase
+##? usage: string lower [STRING...]
+function string-lower {
+  (( $# )) || return 1
+  local s
+  for s in "$@"; do
+    echo ${s:l}
+  done
+}
+
+##? string-upper - convert strings to uppercase
+##? usage: string upper [STRING...]
+function string-upper {
+  (( $# )) || return 1
+  local s
+  for s in "$@"; do
+    echo ${s:u}
   done
 }
 
