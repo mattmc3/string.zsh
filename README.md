@@ -264,7 +264,7 @@ Similar to `join`, `split` is also commonly needs to operate on the null charact
 %
 ```
 
-Now, let's make `split` functions similar to Fish so that we can more easily split strings.
+Now, let's make `split` functions similar to Fish's [string split][string-split] and [string split0][string-split0] so that we can more easily split strings.
 
 ```zsh
 #string.zsh
