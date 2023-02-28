@@ -14,12 +14,14 @@ Tests are run using the following command:
 ./.clitests/runtests
 ```
 
-With that said, here we need to handle test setup.
+Here we need to handle test setup.
 
 ```zsh
 % source string.zsh
 %
 ```
+
+With that out of the way, let's begin.
 
 ## String lengths
 
