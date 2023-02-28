@@ -2,11 +2,16 @@
 
 When it comes to Zsh scripting, a lot of attention is paid to files and the file system, but it's much harder to find good documentation around string manipulation. Information about Zsh strings gets buried in docs obscurely labeled [Parameter Expansion][1] or [Modifiers][2]. The [Fish Shell][fish] shell does a way better job with documentation, and has a handy [string][fish-string] command that covers most of the things you'd ever want to do with strings.
 
-This project aims to use Fish's `string` command to demonstrate Zsh's string handling capabilities. You don't necessarily need Fish's string commands in Zsh, but by building them we can show Zsh's capabilities, and also provide some convienence functions to aid your shell scripting journey.
+This project aims to use Fish's `string` command to demonstrate Zsh's string handling capabilities. You don't necessarily need Fish's string commands in Zsh, but by building them we can show Zsh's capabilities, and also provide some convenience functions to aid your shell scripting journey.
 
 ## Tests
 
-This README is validated using the excellent [clitest] testing framework. Occassionally in this doc I will need to include some testing snippets. I will try avoid them being distracting or doing _magic_. This doc itself is meant to contain all the actual code you need, so you should not have to go find buried tricks in other files.
+This README is validated using the excellent [clitest] testing framework. Occasionally in this doc I will need to include some testing snippets. I will try avoid them being distracting or doing tons of undocumented _magic_. This README itself is meant to contain all the actual code you need, so you should not have to go find buried tricks in other files.
+
+Here are the small handful of _magic_ things done in this doc that you might need to be aware of:
+- if you see `#=> --flag` syntax, that's a thing [clitest] uses for certain kinds of tests
+- if you see the `#string.zsh` comment at the top of a code block, that code is pulled into the string.zsh file so that this project can be used as a Zsh plugin
+- if you see `##?` comments, we use those to indicate usage strings (aka: help)
 
 Tests are run using the following command:
 
@@ -157,14 +162,14 @@ abc
 Fish handles joining strings with the [string join][string-join] and [string join0][string-join0] commands. In Zsh you can join strings with a separator using the `j` [parameter expansion flag][2].
 
 ```zsh
-$ words=(abc def ghi)
-$ sep=:
-$ echo ${(pj.$sep.)words}
+% words=(abc def ghi)
+% sep=:
+% echo ${(pj.$sep.)words}
 abc:def:ghi
-$
+%
 ```
 
-A common join seperator is the null character (`$'\0'`). Many shell utilities will generate null separated data. For example, `find` does this with the `-print0` option.
+A common join separator is the null character (`$'\0'`). Many shell utilities will generate null separated data. For example, `find` does this with the `-print0` option.
 
 ```zsh
 % find . -maxdepth 1 -type f -name '*.zsh' -print0 | tr '\0' '0' && echo
@@ -177,11 +182,11 @@ _Note: Since the null character isn't viewable, we'll replace it with `0` in the
 Fish includes a [`join0`][string-join0] command, which is just a special case of `join` with the null character as a separator, but with one notable exception; the result ends with a null character as well. Notice how the `find -print0` example above also does this. In Zsh, we can accomplish this simply by adding an empty element to the end of whatever list we're joining.
 
 ```zsh
-$ words=(abc def ghi '')
-$ nul=$'\0'
-$ echo ${(pj.$nul.)words} | tr '\0' '0'
+% words=(abc def ghi '')
+% nul=$'\0'
+% echo ${(pj.$nul.)words} | tr '\0' '0'
 abc0def0ghi0
-$
+%
 ```
 
 If you prefer how Fish handles string joining, you can easily accomplish the same functionality in Zsh with these simple join functions:
@@ -207,9 +212,9 @@ function string-join0 {
 Now we can use `join` commands in Zsh too.
 
 ```zsh
-% string join '/' a b c
+% string-join '/' a b c
 a/b/c
-% string join0 x y z | tr '\0' '0'
+% string-join0 x y z | tr '\0' '0'
 x0y0z0
 %
 ```
@@ -229,7 +234,7 @@ xyz
 %
 ```
 
-With the `${name:offset:length}` syntax, `offset` is a 0-based index. Negative indexing is also supported, but requires you to surround the number with parenthesis so that the `:-` part isn't interperted as the `${name:-word}` substitution syntax. The length portion is optional, and if omitted means 'go to the end of the string'.
+With the `${name:offset:length}` syntax, `offset` is a 0-based index. Negative indexing is also supported, but requires you to surround the number with parenthesis so that the `:-` part isn't interpreted as the `${name:-word}` substitution syntax. The length portion is optional, and if omitted means 'go to the end of the string'.
 
 ```zsh
 % name="abcdefghijklmnopqrstuvwxyz"
@@ -259,7 +264,7 @@ function string-sub {
 }
 ```
 
-This function is a little more involved than previous examples because we neet to pass option arguments. We use `zparseopts`, and if you are unfamiliar with that Zsh builtin take a second and [familiarize yourself with it here](#zparseopts).
+This function is a little more involved than previous examples because we need to pass option arguments. We use `zparseopts`, and if you are unfamiliar with that Zsh builtin take a second and [familiarize yourself with it here](#zparseopts).
 
 `string-sub` uses the `-s` option for the starting position. If not provided, it gets a default value of 1, which is the first position in the string. The `-e` option is the desired final position of the substring. If not supplied, it gets a default value of -1, which means the end of the string.
 
@@ -363,7 +368,7 @@ function string-pad {
 }
 ```
 
-This function is a lot more complicated than previous examples, so let's break it down. First, we need to parse options again. The `-c padchar` option is for the padding character, defaulting to a single space. The `-w width` option tells us how far out to pad. If `-w` isn't specifed, we use the length of the longest string provided to the function. The `-r` option switches from the default left padding to the right side.
+This function is a lot more complicated than previous examples, so let's break it down. First, we need to parse options again. The `-c padchar` option is for the padding character, defaulting to a single space. The `-w width` option tells us how far out to pad. If `-w` isn't specified, we use the length of the longest string provided to the function. The `-r` option switches from the default left padding to the right side.
 
 We also use the `[[ test ]]` syntax. `[[ -v var ]]` tests whether a variable is set. `[[ num1 -gt num2 ]]` tests whether num1 is greater than num2.
 
@@ -495,7 +500,7 @@ local -A opts=(-x 1 -z 3)
 zparseopts -D -F -K -A opts -- x: y z: || return 1
 ```
 
-If you are not familiar with `zparseopts`, you can [read more in the docs][zparseopts]. The short explaination is that we are telling `zparseopts` to:
+If you are not familiar with `zparseopts`, you can [read more in the docs][zparseopts]. The short explanation is that we are telling `zparseopts` to:
 
 - **delete (`-D`)** parsed options from `$@`.
 - **fail (`-F`)** if a bad option is passed by the user.
