@@ -261,7 +261,7 @@ function string-sub {
 
 This function is a little more involved than previous examples because we neet to pass option arguments. We use `zparseopts`, and if you are unfamiliar with that Zsh builtin take a second and [familiarize yourself with it here](#zparseopts).
 
-`string-sub` uses the `-s` option for the starting position, with a default value of 1, which is the first position in the string. The `-e` option is the final position, with a default value of -1 (the end of the string).
+`string-sub` uses the `-s` option for the starting position. If not provided, it gets a default value of 1, which is the first position in the string. The `-e` option is the desired final position of the substring. If not supplied, it gets a default value of -1, which means the end of the string.
 
 With this function you can now work with substrings similar to how Fish does:
 
