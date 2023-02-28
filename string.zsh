@@ -30,6 +30,13 @@ function string-upper {
   done
 }
 
+##? string-trim - remove leading and trailing whitespace
+##? usage: string trim [STRING...]
+function string-trim {
+  (( $# )) || return 1
+  printf '%s\n' "$@" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//'
+}
+
 ##? string-join - join strings with delimiter
 ##? usage: string join SEP [STRING...]
 function string-join {

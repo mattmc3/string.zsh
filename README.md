@@ -157,6 +157,65 @@ abc
 %
 ```
 
+## Trimming strings
+
+Trimming strings (also known as stripping) means removing leading or trailing content from a string. Zsh only has partial support for trimming strings as we'll see.
+
+If you want to remove the leading or trailing part of a string, and you can accurately represent that leading part with a glob pattern, you can accomplish that with the `#` and `%` [parameter expansions][4].
+
+The `#` expansion removes from the start of the string. A single `#` removes the shortest match, while a `##` removes the longest.
+
+```zsh
+% str="a/b/c/d/e/f/g"
+% # remove a/
+% echo ${str#*/}
+b/c/d/e/f/g
+% # remove a/b/c/d/e/f/
+% echo ${str##*/}
+g
+%
+```
+
+The `%` expansion removes from the end of the string. A single `%` removes the shortest match, while a `%%` removes the longest.
+
+```zsh
+% str="a/b/c/d/e/f/g"
+% # remove /g
+% echo ${str%/*}
+a/b/c/d/e/f
+% # remove /b/c/d/e/f/g
+% echo ${str%%/*}
+a
+%
+```
+
+More commonly, we often want to remove leading and trailing whitespace from a string. Once we start to get into patterns like "spaces or newlines or tabs or carriage returns" we run into trouble sticking to Zsh builtins. This is what tools like `sed` are built for. If you like Fish's [string trim][string-trim] command, and just care about trimming whitespace, we can make a trim function that wraps `sed` like this:
+
+```zsh
+#string.zsh
+##? string-trim - remove leading and trailing whitespace
+##? usage: string trim [STRING...]
+function string-trim {
+  (( $# )) || return 1
+  printf '%s\n' "$@" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//'
+}
+```
+
+`sed` can feel a lot like _magic_, especially if you don't understand [regular expression][regex] patterns. To make it even more complicated, there are Perl Compatible Regular Expressions (PCREs) and Basic Regular Expressions (BREs). Teaching regex is outside the scope of this document. See the POSIX specifications to learn more about [`sed`][sed] and [Basic Regular Expressions][basic-re].
+
+Let's try out our new `string-trim` function:
+
+```zsh
+% tab=$'\t'; nl=$'\n'
+% string-trim "  a b c  "
+a b c
+% string-trim "${tab}x y z${tab}"
+x y z
+% echo "|$(string-trim "  ${tab}${tab}  ${tab} a b c${tab}  ${nl}${nl} ")|"
+|a b c|
+%
+```
+
 ## Joining strings
 
 Fish handles joining strings with the [string join][string-join] and [string join0][string-join0] commands. In Zsh you can join strings with a separator using the `j` [parameter expansion flag][2].
@@ -640,3 +699,6 @@ A quick note on Zsh versions - the scripts in this doc are verified with a moder
 [clitest]: https://github.com/aureliojargas/clitest
 [zsh-news]: https://zsh.sourceforge.io/News/
 [zparseopts]: https://zsh.sourceforge.io/Doc/Release/Zsh-Modules.html#index-zparseopts
+[sed]: https://pubs.opengroup.org/onlinepubs/009695399/utilities/sed.html
+[basic-re]: https://pubs.opengroup.org/onlinepubs/009695399/basedefs/xbd_chap09.html#tag_09_03
+[regex]: https://www.regular-expressions.info/
