@@ -229,7 +229,7 @@ xyz
 %
 ```
 
-With the `${name:offset:length}` syntax, `offset` is a 0-based index. Negative indexing is also supported, but requires you to surround the number with parenthesis so that the `:-` part isn't interperted as the `${name:-word}` substitution syntax. The length portion is optional, and if omitted means go to the end of the string.
+With the `${name:offset:length}` syntax, `offset` is a 0-based index. Negative indexing is also supported, but requires you to surround the number with parenthesis so that the `:-` part isn't interperted as the `${name:-word}` substitution syntax. The length portion is optional, and if omitted means 'go to the end of the string'.
 
 ```zsh
 % name="abcdefghijklmnopqrstuvwxyz"
