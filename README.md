@@ -1,12 +1,12 @@
 # string.zsh
 
-When it comes to Zsh scripting, a lot of attention is paid to files and the file system, but it's much harder to find good documentation around string manipulation. Information about Zsh strings gets buried in the docs obscurely labeled [Parameter Expansion][1] or [Modifiers][2]. The [Fish Shell][fish] shell does a way better job with documentation, and has a handy [string][fish-string] command that covers most of the things you'd ever want to do with strings.
+When it comes to Zsh scripting, a lot of attention is paid to files and the file system, but it's much harder to find good documentation around string manipulation. Information about Zsh strings gets buried in docs obscurely labeled [Parameter Expansion][1] or [Modifiers][2]. The [Fish Shell][fish] shell does a way better job with documentation, and has a handy [string][fish-string] command that covers most of the things you'd ever want to do with strings.
 
-This project aims to use Fish's `string` command as a template for building Zsh string functions. You don't necessarily need these Fish functions in Zsh, but they serve as a good tool to show you how Zsh accomplishes all the same things.
+This project aims to use Fish's `string` command to demonstrate Zsh's string handling capabilities. You don't necessarily need Fish's string commands in Zsh, but by building them we can show Zsh's capabilities, and also provide some convienence functions to aid your shell scripting journey.
 
 ## Tests
 
-This README is validated using the excellent [clitest] testing framework. Occassionally in this doc I will include some testing snippets. I will try avoid them being distracting or doing any __magic__ in them. This doc itself is meant to contain all the actual code you need, not have things buried away.
+This README is validated using the excellent [clitest] testing framework. Occassionally in this doc I will need to include some testing snippets. I will try avoid them being distracting or doing _magic_. This doc itself is meant to contain all the actual code you need, so you should not have to go find buried tricks in other files.
 
 Tests are run using the following command:
 
@@ -60,7 +60,7 @@ With this function you can now get string lengths similar to how Fish does it:
 
 ## Changing case
 
-In Zsh you can convert strings to upper or lower case using the `u` or `l` [modifiers][3], **OR** the `U` or `L` [parameter expansion flags][2]. Yep, you read that right - Zsh often has multiple different ways to do the same thing. AND it uses funny names for the syntax which makes it difficult to search for. AND it changes the case of the letters used depending on which syntax you use!
+In Zsh you can convert strings to upper or lower case using the `u` or `l` [modifiers][3], **OR** the `U` or `L` [parameter expansion flags][2]. Yep, you read that right - Zsh often has multiple different ways to do the same thing ([TMTOWTDI](https://en.wiktionary.org/wiki/TMTOWTDI)). **AND** it uses funny names for the syntax which makes it difficult to search for. **AND** it changes the case of the letters used depending on which syntax you use! There's a reason Fish markets itself as the Friendly Interactive SHell.
 
 Here's how you use [modifiers][3] to change case:
 
@@ -73,7 +73,7 @@ abcdefghijklmnopqrstuvwxyz
 %
 ```
 
-If you forget and use the wrong case, your string will be wrong, which is why it's better to enclose your variables in curly braces when using modifiers:
+If you forget and use the wrong case your string will be wrong, which is why it's better to enclose your variables in curly braces when using modifiers:
 
 ```zsh
 % # EPIC FAIL EXAMPLES:
@@ -97,7 +97,7 @@ abcdefghijklmnopqrstuvwxyz
 %
 ```
 
-Unfortunately, you won't be so lucky if you accidentally use the wrong case when you use parameter expansion flags, because the lowercase `u` is used to apply uniqueness to the result.
+Unfortunately, if you accidentally use the wrong case when you use parameter expansion flags you're in for a surprise because the lowercase `u` is used to apply uniqueness to the result.
 
 ```zsh
 % # EPIC FAIL EXAMPLES:
@@ -139,12 +139,10 @@ function string-upper {
 With these functions you can now get change string case similar to how Fish does it:
 
 ```zsh
-% # upper case
 % string-upper A bb Abc
 A
 BB
 ABC
-% # lower case
 % string-lower A bb Abc
 a
 bb
@@ -166,15 +164,15 @@ $
 
 A common join seperator is the null character (`$'\0'`). Many shell utilities will generate null separated data. For example, `find` does this with the `-print0` option.
 
-_Note: Since the null character isn't viewable, I'll need replace it in the following examples using `| tr '\0' '0'` so it's visible for the purpose of demonstration._
-
 ```zsh
 % find . -maxdepth 1 -type f -name '*.zsh' -print0 | tr '\0' '0' && echo
 ./string.zsh0./string.plugin.zsh0
 %
 ```
 
-Fish includes a [`join0`][fish-join0] command, which is just a special case of `join` with the null character as a separator, but with one notable exception; the result ends with a null character as well. In Zsh, we can accomplish this simply by adding an empty element to the end of whatever list we're joining.
+_Note: Since the null character isn't viewable, we'll replace it with `0` in these examples using `| tr '\0' '0'` so it's visible for demo purposes._
+
+Fish includes a [`join0`][string-join0] command, which is just a special case of `join` with the null character as a separator, but with one notable exception; the result ends with a null character as well. Notice how the `find -print0` example above also does this. In Zsh, we can accomplish this simply by adding an empty element to the end of whatever list we're joining.
 
 ```zsh
 $ words=(abc def ghi '')
@@ -184,7 +182,7 @@ abc0def0ghi0
 $
 ```
 
-If you like how Fish does things, you can also easily accomplish the same functionality in Zsh with these simple functions:
+If you prefer how Fish handles string joining, you can easily accomplish the same functionality in Zsh with these simple join functions:
 
 ```zsh
 #string.zsh
@@ -204,7 +202,7 @@ function string-join0 {
 }
 ```
 
-Now we also have proper `join` commands in Zsh.
+Now we can use `join` commands in Zsh too.
 
 ```zsh
 % string join '/' a b c
@@ -216,7 +214,7 @@ x0y0z0
 
 ## Substrings
 
-Unfortunately, like many areas of Zsh, there are multiple diffent ways to get a substring in Zsh. Zsh also refers to substrings as 'parameter subscripting', which makes it difficult to find in the docs.
+Again, like many areas of Zsh, there are multiple diffent ways to get a substring in Zsh. Zsh also refers to substrings as 'parameter subscripting', which makes it difficult to find in the docs.
 
 In Zsh you get substrings using the `$name[start,end]` syntax, or the `${name:offset:length}` syntax. With `$name[start,end]` syntax, `start` and `end` refer to the 1-based index position. You can also use negative numbers to index from the end of a string.
 
@@ -363,11 +361,11 @@ function string-pad {
 }
 ```
 
-This function is a lot more complicated than previous examples, so let's break it down. First, we need to parse options again. The `-c padchar` option is for the padding character, with a default value of a single space. The `-w width` option tells us how far out to pad. If `-w` isn't specifed, we use the length of the longest string provided to the function. The `-r` option switches from the default left padding to the right side.
+This function is a lot more complicated than previous examples, so let's break it down. First, we need to parse options again. The `-c padchar` option is for the padding character, defaulting to a single space. The `-w width` option tells us how far out to pad. If `-w` isn't specifed, we use the length of the longest string provided to the function. The `-r` option switches from the default left padding to the right side.
 
 We also use the `[[ test ]]` syntax. `[[ -v var ]]` tests whether a variable is set. `[[ num1 -gt num2 ]]` tests whether num1 is greater than num2.
 
-And finally, we build out a padding expression to `eval` because Zsh doesn't allow the padding expression to use variable substitution, and we need it to.
+And finally, we build out a padding expression but have to `eval` it because Zsh doesn't allow the padding expression to use variables like we need it to.
 
 With this function you can now pad strings similar to how Fish does:
 
@@ -462,13 +460,13 @@ Many of Fish's `string` commands include a `-q | --quiet` flag to suppress outpu
 %
 ```
 
-Fish also lets you add `>/dev/null` to commands, but it includes the quiet flag too. For the purposed of this demo, it's unnecessary complexity to support a `-q` flag in nearly every command when there's a preferred alternative.
+Fish also lets you add `>/dev/null` to commands, but it includes the `--quiet` flag too. For the purposed of this demo, it's unnecessary to support a `-q` flag in nearly every command when there's a preferred alternative.
 
 ### Fish's `string collect`
 
-We didn't show an example of writing a [`string-collect`](string-collect) function because that may be needed for Fish, but not Zsh.
+We didn't show an example of writing a [`string-collect`](string-collect) function because that may be needed for Fish, but makes less sense in Zsh.
 
-However, for completeness, it's worth noting that you can already collect multi-line input into a variable. You can also collect it into an array by combining the `@` and `f` expansion flags in Zsh like so:
+However, for completeness, it's worth noting how to collect multi-line input into a string, or into an array by combining the `@` and `f` expansion flags in Zsh like so:
 
 ```zsh
 % str=$(echo "one\ntwo\nthree")
