@@ -219,9 +219,112 @@ x0y0z0
 %
 ```
 
+## Splitting strings
+
+Similar to joining strings, Zsh can also split them up. To split strings you use the `s` [parameter expansion flag][2].
+
+```zsh
+% str="a/b//c"
+% sep=/
+% echo ${(ps.$sep.)str}
+a b c
+% printf '%s\n' "${(@ps.$sep.)str}"
+a
+b
+
+c
+%
+```
+
+Let's break down all the [expansion flags][2] we're using here:
+
+- `@`: Preserve empty elements - _"In double quotes, array elements are put into separate words"_.
+- `p`: Use print syntax - _"Recognize the same escape sequences as the print."_
+- `s`: Split - _"Force field splitting at the separator string."_
+
+Similar to `join`, `split` is also commonly needs to operate on the null character (`$'\0'`) as a delimiter.
+
+```zsh
+% data=$(find . -maxdepth 1 -type f -name '*.zsh' -print0)
+% echo $data | tr '\0' '0'
+./string.zsh0./string.plugin.zsh0
+% nul=$'\0'
+% parts=("${(@ps.$nul.)data}")
+% echo $#parts
+3
+% # remember, we have to handle the trailing \0,
+% # so we need to remove the last array element
+% parts=($parts[1,-2])
+% echo $#parts
+2
+% # now, show us the results
+% printf '%s\n' $parts
+./string.zsh
+./string.plugin.zsh
+%
+```
+
+Now, let's make `split` functions similar to Fish so that we can more easily split strings.
+
+```zsh
+#string.zsh
+##? string-split - split strings by delimiter
+##? usage: string split SEP [STRING...]
+function string-split {
+  (( $# )) || return 1
+  local s sep=$1; shift
+  for s in "$@"; printf '%s\n' "${(@ps.$sep.)s}"
+}
+
+##? string-split0 - split strings by null character
+##? usage: string split0 [STRING...]
+function string-split0 {
+  (( $# )) || return 1
+  set -- "${@%$'\0'}"
+  string-split $'\0' "$@"
+}
+```
+
+> Wait a second! You said no _magic_! What the heck is `set -- "${@%$'\0'}"`!?
+
+That statement is really tricky. It says re-set the argument array `$@` to whatever was already in the argument array, but remove the final trailing null character if it exists. The `${name%pattern}` parameter expansion, which strips the specified pattern from the right side of the string, is how we accomplish this.
+
+You can see it in action here:
+
+```zsh
+% nul=$'\0'
+% str="$(echo a0b0c000 | tr '0' '\0')"
+% echo $str | tr '\0' '0'
+a0b0c000
+% echo ${str%${nul}} | tr '\0' '0'
+a0b0c00
+% # it's safe to perform that right strip on strings without a trailing null char too
+% str="abc"
+% echo ${str%${nul}} | tr '\0' '0'
+abc
+%
+```
+
+Now that I've explained all that, we can see how our new `split` commands work in Zsh.
+
+```zsh
+% string-split '/' "a/b" "x/y/z"
+a
+b
+x
+y
+z
+% str=$(printf 'a0b0c0' | tr '0' '\0')
+% string-split0 "$str"
+a
+b
+c
+%
+```
+
 ## Substrings
 
-Again, like many areas of Zsh, there are multiple diffent ways to get a substring in Zsh. Zsh also refers to substrings as 'parameter subscripting', which makes it difficult to find in the docs.
+Again, like many areas of Zsh, there are multiple different ways to get a substring in Zsh. Zsh also refers to substrings as 'parameter subscripting', which makes it difficult to find in the docs.
 
 In Zsh you get substrings using the `$name[start,end]` syntax, or the `${name:offset:length}` syntax. With `$name[start,end]` syntax, `start` and `end` refer to the 1-based index position. You can also use negative numbers to index from the end of a string.
 

@@ -45,6 +45,22 @@ function string-join0 {
   string-join $'\0' "$@" ''
 }
 
+##? string-split - split strings by delimiter
+##? usage: string split SEP [STRING...]
+function string-split {
+  (( $# )) || return 1
+  local s sep=$1; shift
+  for s in "$@"; printf '%s\n' "${(@ps.$sep.)s}"
+}
+
+##? string-split0 - split strings by null character
+##? usage: string split0 [STRING...]
+function string-split0 {
+  (( $# )) || return 1
+  set -- "${@%$'\0'}"
+  string-split $'\0' "$@"
+}
+
 ##? string-sub - extract substrings
 ##? usage: string sub [-s start] [-e end] [STRINGS...]
 function string-sub {
