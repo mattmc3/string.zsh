@@ -37,6 +37,26 @@ function string-trim {
   printf '%s\n' "$@" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//'
 }
 
+##? string-escape - escape special characters
+##? usage: string escape [STRING...]
+function string-escape {
+  (( $# )) || return 1
+  local s
+  for s in "$@"; do
+    echo ${(q-)s}
+  done
+}
+
+##? string-unescape - expand escape sequences
+##? usage: string unescape [STRING...]
+function string-unescape {
+  (( $# )) || return 1
+  local s
+  for s in "$@"; do
+    echo ${s:Q}
+  done
+}
+
 ##? string-join - join strings with delimiter
 ##? usage: string join SEP [STRING...]
 function string-join {

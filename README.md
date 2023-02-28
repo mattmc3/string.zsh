@@ -216,6 +216,83 @@ x y z
 %
 ```
 
+## Escaping strings
+
+Strings often have characters in them that need 'escaped' or 'quoted' properly. Quoting strings is done with the [q modifier][1]. This is similar to [string escape][string-escape] in Fish.
+
+```zsh
+% str="3 tabs \t\t\t."
+% echo "${str:q}"
+3\ tabs\ \t\t\t.
+%
+```
+
+You can unquote (unescape) strings with the [Q modifier][1]. This is similar to [string unescape][string-unescape] in Fish.
+
+```zsh
+% str="3 backticks \`\`\`."
+% esc="${str:q}"
+% echo $esc
+3\ backticks\ \`\`\`.
+% echo "${esc:Q}"
+3 backticks ```.
+%
+```
+
+In Zsh you can quote strings different ways using `q`, `qq`, `qqq`, `qqqq`, as well as `q-` and `q+`. Each results in different quoting output. They mean:
+
+- `q`: Quote characters that are special to the shell with backslashes
+- `qq`: Quote with results in 'single' quotes
+- `qqq`: Quote with results in "double" quotes
+- `qqq`: Quote with results in $'dollar' quotes
+- `q-`: Minimal quoting only where required
+- `q+`: Extended minimal quoting using $'dollar'
+
+```zsh
+% strip() { sed -r 's/\x1B\[(;?[0-9]{1,3})+[mGK]//g' }
+% normal="\e[0;0m"
+% blue="\e[0;34m"
+% str="${blue}this is blue${normal}"
+% echo ${(q-)str} | strip
+'this is blue'
+% echo ${(q+)str} | strip
+'this is blue'
+% echo ${(q)str}
+\e\[0\;34mthis\ is\ blue\e\[0\;0m
+% echo ${(qq)str} | strip
+'this is blue'
+% echo ${(qqq)str}
+"\e[0;34mthis is blue\e[0;0m"
+% echo ${(qqqq)str}
+$'\e[0;34mthis is blue\e[0;0m'
+%
+```
+
+Or, you can use write your own `string escape` and `string unescape` convenience functions to do the same thing. Use whichever method of quoting you prefer.
+
+```zsh
+#string.zsh
+##? string-escape - escape special characters
+##? usage: string escape [STRING...]
+function string-escape {
+  (( $# )) || return 1
+  local s
+  for s in "$@"; do
+    echo ${(q-)s}
+  done
+}
+
+##? string-unescape - expand escape sequences
+##? usage: string unescape [STRING...]
+function string-unescape {
+  (( $# )) || return 1
+  local s
+  for s in "$@"; do
+    echo ${s:Q}
+  done
+}
+```
+
 ## Joining strings
 
 Fish handles joining strings with the [string join][string-join] and [string join0][string-join0] commands. In Zsh you can join strings with a separator using the `j` [parameter expansion flag][2].
