@@ -76,8 +76,7 @@ function string-join0 {
 ##? usage: string split SEP [STRING...]
 function string-split {
   (( $# )) || return 1
-  local s sep=$1; shift
-  for s in "$@"; printf '%s\n' "${(@ps.$sep.)s}"
+  printf '%s\n' "${(@ps.$1.)@[2,-1]}"
 }
 
 ##? string-split0 - split strings by null character

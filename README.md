@@ -376,7 +376,7 @@ Now we can use functions similar to Fish's for string escaping.
 
 ## Joining strings
 
-Fish handles joining strings with the [string join][string-join] and [string join0][string-join0] commands. In Zsh you can join strings with a separator using the `j` [parameter expansion flag][2].
+Fish handles joining strings with the [string join][string-join] command. In Zsh we can join strings with a separator using the `j` [parameter expansion flag][2].
 
 ```zsh
 % words=(abc def ghi)
@@ -396,7 +396,7 @@ A common join separator is the null character (`$'\0'`). Many shell utilities wi
 
 _Note: Since the null character isn't viewable, we'll replace it with `0` in these examples using `| tr '\0' '0'` so it's visible for demo purposes._
 
-Fish includes a [`join0`][string-join0] command, which is just a special case of `join` with the null character as a separator, but with one notable exception; the result ends with a null character as well. Notice how the `find -print0` example above also does this. In Zsh, we can accomplish this simply by adding an empty element to the end of whatever list we're joining.
+Fish also includes the [`join0`][string-join0] command, which is just a special case of `join` with the null character as a separator, but with one notable exception; the result tacks on a trailing null character. Notice how the `find -print0` example above also does this. In Zsh, we can accomplish this simply by adding an empty element to the end of whatever list we're joining.
 
 ```zsh
 % words=(abc def ghi '')
@@ -406,7 +406,7 @@ abc0def0ghi0
 %
 ```
 
-If you prefer how Fish handles string joining, you can easily accomplish the same functionality in Zsh with these simple join functions:
+If you prefer how Fish handles string joining, you can easily accomplish the same thing in Zsh with these two simple join functions:
 
 ```zsh
 #string.zsh
@@ -459,29 +459,48 @@ Let's break down all the [expansion flags][2] we're using here:
 - `p`: Use print syntax - _"Recognize the same escape sequences as the print."_
 - `s`: Split - _"Force field splitting at the separator string."_
 
-Similar to `join`, `split` is also commonly needs to operate on the null character (`$'\0'`) as a delimiter.
+Similar to `join`, `split` is also commonly needs to operate on the null character (`$'\0'`) as a delimiter. Let's show how that works with our `find -print0` command:
 
 ```zsh
-% data=$(find . -maxdepth 1 -type f -name '*.zsh' -print0)
-% echo $data | tr '\0' '0'
-./string.zsh0./string.plugin.zsh0
 % nul=$'\0'
-% parts=("${(@ps.$nul.)data}")
-% echo $#parts
-3
-% # remember, we have to handle the trailing \0,
-% # so we need to remove the last array element
-% parts=($parts[1,-2])
-% echo $#parts
-2
-% # now, show us the results
-% printf '%s\n' $parts
+% files=$(find . -maxdepth 1 -type f -name '*.zsh' -print0)
+% echo $files | tr '\0' '0'
+./string.zsh0./string.plugin.zsh0
+% printf '%s\n' "${(@ps.$nul.)files}"
+./string.zsh
+./string.plugin.zsh
+
+%
+```
+
+Oops. Did you notice what happened there? That trailing null character bit us when we split and we wound up with a trailing empty element. We can fix that in a couple of ways.
+
+First, we could just throw away empty strings:
+
+```zsh
+% printf '%s\n' ${(ps.$nul.)files}
 ./string.zsh
 ./string.plugin.zsh
 %
 ```
 
-Now, let's make `split` functions similar to Fish's [string split][string-split] and [string split0][string-split0] so that we can more easily split strings.
+That works when we don't care about empty strings, but when we don't want to lose data we could also remove the trailing null character:
+
+```zsh
+% # setup
+% nul=$'\0'
+% str=$(echo a00b0 | tr '0' '\0')
+% # remove the trailing null
+% str=${str%$nul}
+% # now, show us the correct results
+% printf '%s\n' "${(@ps.$nul.)str}"
+a
+
+b
+%
+```
+
+Now, let's make simple `split` functions similar to Fish's [string split][string-split] and [string split0][string-split0] so that we can more easily split strings.
 
 ```zsh
 #string.zsh
@@ -489,8 +508,7 @@ Now, let's make `split` functions similar to Fish's [string split][string-split]
 ##? usage: string split SEP [STRING...]
 function string-split {
   (( $# )) || return 1
-  local s sep=$1; shift
-  for s in "$@"; printf '%s\n' "${(@ps.$sep.)s}"
+  printf '%s\n' "${(@ps.$1.)@[2,-1]}"
 }
 
 ##? string-split0 - split strings by null character
@@ -502,25 +520,13 @@ function string-split0 {
 }
 ```
 
-> Wait a second! You said no _magic_! What the heck is `set -- "${@%$'\0'}"`!?
+> Wait a second! You said no _magic_! What the heck is `${(@ps.$1.)@[2,-1]}` and `set -- "${@%$'\0'}"`!?
 
-That statement is really tricky. It says re-set the argument array `$@` to whatever was already in the argument array, but remove the final trailing null character from each element if it exists. The `${name%pattern}` parameter expansion, which strips the specified pattern from the right side of the string, is how we accomplish this.
+Those statements are really tricky. Let's break them down.
 
-You can see it in action here:
+- `${(@ps.$1.)@[2,-1]}` : This simply says - perform a split to an array, and use the first argument (`$1`) as the separator and the rest of the arguments (`$@[2,-1]`) as the strings to split.
 
-```zsh
-% nul=$'\0'
-% str="$(echo a0b0c000 | tr '0' '\0')"
-% echo $str | tr '\0' '0'
-a0b0c000
-% echo ${str%${nul}} | tr '\0' '0'
-a0b0c00
-% # it's safe to perform that right strip on strings without a trailing null char too
-% str="abc"
-% echo ${str%${nul}} | tr '\0' '0'
-abc
-%
-```
+`set -- "${@%$'\0'}"` : This says - re-set the argument array `$@` to whatever was already in the argument array, but remove the final trailing null character from each element if it exists. We learned about the `${name%pattern}` right strip parameter expansion in the [trim](#trimming-strings)) section of this doc.
 
 Now that I've explained all that, we can see how our new `split` commands work in Zsh.
 
