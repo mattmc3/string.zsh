@@ -14,6 +14,7 @@ Here are the small handful of _magic_ things done in this doc that you might wan
 - if you see `#=> --flag` syntax, that's a thing [clitest] uses for certain kinds of tests
 - if you see the `#string.zsh` comment at the top of a code block, I use that to indicate that the code block should be pulled into the string.zsh
 - if you see `##?` comments, we use those to indicate usage strings (aka: help)
+- clitests are restricted to one-line only, so you'll see bias towards one-liners throughout. (eg: `if/else` multi-line statements become `test && success-part || fail-part`, and `for/do/done` multi-line statements become `for val in $arr; echo $val`).
 
 Tests are run using the following command:
 
@@ -722,9 +723,75 @@ dddd_
 %
 ```
 
-## Repeating strings
+## Shortening
 
-## Repeat
+Fish also provides a way to [shorten strings][string-short] and add an ellipsis to the end. For example:
+
+```zsh
+% str="abcdefghijklmnopqrstuvwxyz"
+% len=6
+% [[ $#str -lt $len ]] && echo ${str} || echo ${str:0:((len-1))}…
+abcde…
+% [[ $#str -lt $len ]] && echo ${str} || echo ${str:0:((len-3))}...
+abc...
+%
+```
+
+Note: the `test && succeed || fail` patten is really common in shell scripting. It basically reads as "if a test succeeds, do a thing, otherwise do something else". It's a shorthand way of writing an `if/else` statement. Our previous command could also have been written like so:
+
+```zsh
+if [[ $#str -lt $len ]]
+then
+  echo ${str}
+else
+  echo ${str:0:((len-3))}...
+fi
+```
+
+Given everything we now know about strings in Zsh, this one should feel really simple:
+
+```zsh
+#string.zsh
+##? string-shorten - shorten strings to a max width, with an ellipsis
+##? usage: string shorten [-c] [-m max] [STRINGS...]
+function string-shorten {
+  (( $# )) || return 1
+  local -A opts=(-c …)
+  zparseopts -D -K -A opts -- c: m:
+  # user provided max len, or take the shortest string length
+  local s len=$#1
+  if [[ -v opts[-m] ]]; then
+    len=$opts[-m]
+  else
+    for s in "$@"; [[ $#s -lt $len ]] && len=$#s
+  fi
+  for s in "$@"; do
+    if [[ $#s -gt $len ]]; then
+      echo ${s:0:((len-$#opts[-c]))}${opts[-c]}
+    else
+      echo $s
+    fi
+  done
+}
+```
+
+```zsh
+% str="abcdefghijklmnopqrstuvwxyz"
+% string-shorten -m 6 $str
+abcde…
+% string-shorten -c '...' -m 6 $str 'xyzxyzxyz' 'short'
+abc...
+xyz...
+short
+% string-shorten long longer longest reallyreallylong
+long
+lon…
+lon…
+rea…
+%
+```
+
+## Repeating strings
 
 Strings can be repeated by using `printf`, which outputs based on a format string.
 
@@ -826,7 +893,7 @@ function string {
   if [[ "$1" == (-h|--help) ]]; then
     grep "^##? string -" ${0:A} | cut -c 5-
     echo "usage:"
-    grep "^##? usage:" ${0:A} | cut -c 11-
+    grep "^##? usage:" ${0:A} | cut -c 11- | sort
     return
   fi
 

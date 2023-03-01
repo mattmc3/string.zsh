@@ -111,6 +111,28 @@ function string-sub0 {
   done
 }
 
+##? string-shorten - shorten strings to a max width, with an ellipsis
+##? usage: string shorten [-c] [-m max] [STRINGS...]
+function string-shorten {
+  (( $# )) || return 1
+  local -A opts=(-c …)
+  zparseopts -D -K -A opts -- c: m:
+  # user provided max len, or take the shortest string length
+  local s len=$#1
+  if [[ -v opts[-m] ]]; then
+    len=$opts[-m]
+  else
+    for s in "$@"; [[ $#s -lt $len ]] && len=$#s
+  fi
+  for s in "$@"; do
+    if [[ $#s -gt $len ]]; then
+      echo ${s:0:((len-$#opts[-c]))}${opts[-c]}
+    else
+      echo $s
+    fi
+  done
+}
+
 ##? string-pad - pad strings to a fixed width
 ##? usage: string pad [-r] [-c padchar] [-w width] [STRINGS...]
 function string-pad {
@@ -152,7 +174,7 @@ function string {
   if [[ "$1" == (-h|--help) ]]; then
     grep "^##? string -" ${0:A} | cut -c 5-
     echo "usage:"
-    grep "^##? usage:" ${0:A} | cut -c 11-
+    grep "^##? usage:" ${0:A} | cut -c 11- | sort
     return
   fi
 
