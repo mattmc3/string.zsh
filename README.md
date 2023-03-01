@@ -722,6 +722,95 @@ dddd_
 %
 ```
 
+## Repeating strings
+
+## Repeat
+
+Strings can be repeated by using `printf`, which outputs based on a format string.
+
+```zsh
+$ str="abc"
+$ printf "$str%.0s" {1..3}
+abcabcabc
+$
+```
+
+Let's start off creating a simple `string repeat` function to wrap this.
+
+```zsh
+# string repeat - simple version
+function string-repeat {
+  (( $# )) || return 1
+  local s
+  local -A opts=(-n 1)
+  zparseopts -D -K -A opts -- n:
+  for s in "$@"; do
+    printf "$s%.0s" {1..$opts[-n]}
+    printf "\n"
+  done
+}
+```
+
+And we can test it:
+
+```zsh
+% string-repeat -n 3 abc xyz
+abcabcabc
+xyzxyzxyz
+%
+```
+
+This function will work, but Fish's [string repeat][string-repeat] has a few more bells and whistles. If you want to support `-m` for a max string length and `-N` to suppress newlines just like Fish's `string repeat` command does, you could implement it this way:
+
+```zsh
+#string.zsh
+##? string-repeat - multiply a string
+##? usage: string repeat [-n count] [-m max] [-N][STRING ...]
+function string-repeat {
+  (( $# )) || return 1
+  local s n
+  local -A opts
+  zparseopts -D -A opts -- n: m: N
+  n=${opts[-n]:-$opts[-m]}
+  for s in "$@"; do
+    s=$(printf "$s%.0s" {1..$n})
+    [[ -v opts[-m] ]] && printf "${s:0:$opts[-m]}" || printf "$s"
+    [[ -v opts[-N] ]] || printf '\n'
+  done
+}
+```
+
+Now our string-repeat function behaves more like Fish's [string-repeat].
+
+```zsh
+### Test repeat subcommand
+% string-repeat -n 2 foo
+foofoo
+% string-repeat -n1 -N "there is "; echo "no newline"
+there is no newline
+% string-repeat -n10 -m4 foo
+foof
+% string-repeat -n10 -m5 foo
+foofo
+% string-repeat -n3 -m20 foo
+foofoofoo
+% string-repeat -m4 foo
+foof
+% string-repeat -n 5 a b c
+aaaaa
+bbbbb
+ccccc
+% string-repeat -n 5 -m4 123 456 789
+1231
+4564
+7897
+% string-repeat -n 5 -m4 123 '' 789
+1231
+
+7897
+%
+```
+
 ## The `string` wrapper
 
 Fish's [`string` command][fish-string] wraps all this functionality and handles pipe input too. You can also easily accomplish the same thing in Zsh.

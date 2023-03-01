@@ -128,6 +128,21 @@ function string-pad {
   done
 }
 
+##? string-repeat - multiply a string
+##? usage: string repeat [-n count] [-m max] [-N][STRING ...]
+function string-repeat {
+  (( $# )) || return 1
+  local s n
+  local -A opts
+  zparseopts -D -A opts -- n: m: N
+  n=${opts[-n]:-$opts[-m]}
+  for s in "$@"; do
+    s=$(printf "$s%.0s" {1..$n})
+    [[ -v opts[-m] ]] && printf "${s:0:$opts[-m]}" || printf "$s"
+    [[ -v opts[-N] ]] || printf '\n'
+  done
+}
+
 ##? string - manipulate strings
 function string {
   emulate -L zsh
