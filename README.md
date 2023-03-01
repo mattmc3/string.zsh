@@ -560,12 +560,14 @@ xyz
 %
 ```
 
-With the `${name:offset:length}` syntax, `offset` is a 0-based index. Negative indexing is also supported, but requires you to surround the number with parenthesis so that the `:-` part isn't interpreted as the `${name:-word}` substitution syntax. The length portion is optional, and if omitted means 'go to the end of the string'.
+With the `${name:offset:length}` syntax, `offset` is a 0-based index. Negative indexing is also supported, but requires you to surround the number with parenthesis so that the negative number isn't mistaken for the `${name:-word}` substitution syntax. The length portion is optional, and if omitted means 'go to the end of the string'.
 
 ```zsh
 % name="abcdefghijklmnopqrstuvwxyz"
 % echo ${name:2:4}
 cdef
+% echo ${name:24:100}
+yz
 % echo ${name:(-4)}
 wxyz
 % echo ${name:(-15):(-3)}
@@ -573,7 +575,7 @@ lmnopqrstuvw
 %
 ```
 
-Fish handles this with the [string sub][string-sub] command. You can easily accomplish something similar in Zsh with your own version of this function:
+Fish handles substrings with the [string sub][string-sub] command. You can easily accomplish something similar in Zsh with your own version of this function:
 
 ```zsh
 #string.zsh
@@ -657,7 +659,7 @@ ab
 
 In Zsh you can left pad strings using the `l:expr::string1::string2:` syntax. Similarly, right padding is done by changing the leading `l` to an `r` like this `r:expr::string1::string2:`. This is described in the [Expansion Flags][2] section of the Zsh docs.
 
-This can be confusing, so let's look at a simple example.
+This can be confusing, so let's look at a some examples.
 
 ```zsh
 % str="abc"
