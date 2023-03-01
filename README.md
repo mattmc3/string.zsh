@@ -878,6 +878,14 @@ ccccc
 %
 ```
 
+## String replace
+
+TODO:
+
+## String match
+
+TODO:
+
 ## The `string` wrapper
 
 Fish's [`string` command][fish-string] wraps all this functionality and handles pipe input too. You can also easily accomplish the same thing in Zsh.
