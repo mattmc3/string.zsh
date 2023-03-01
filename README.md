@@ -748,7 +748,7 @@ else
 fi
 ```
 
-Given everything we now know about strings in Zsh, this one should feel really simple:
+Given everything we now know about strings in Zsh, this one should feel relatively straightforward:
 
 ```zsh
 #string.zsh
