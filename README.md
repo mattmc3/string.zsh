@@ -732,7 +732,7 @@ three
 
 ### zparseopts
 
-To parse option arguments, many of these scripts use the `zparseopts` builtin. You will see this pattern throughout this doc:
+Many of these scripts use the `zparseopts` builtin to parse arguments. You will see this pattern throughout this doc:
 
 ```zsh
 local -A opts=(-x 1 -z 3)
