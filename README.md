@@ -423,7 +423,7 @@ function string-split0 {
 
 > Wait a second! You said no _magic_! What the heck is `set -- "${@%$'\0'}"`!?
 
-That statement is really tricky. It says re-set the argument array `$@` to whatever was already in the argument array, but remove the final trailing null character if it exists. The `${name%pattern}` parameter expansion, which strips the specified pattern from the right side of the string, is how we accomplish this.
+That statement is really tricky. It says re-set the argument array `$@` to whatever was already in the argument array, but remove the final trailing null character from each element if it exists. The `${name%pattern}` parameter expansion, which strips the specified pattern from the right side of the string, is how we accomplish this.
 
 You can see it in action here:
 
