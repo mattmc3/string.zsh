@@ -43,7 +43,7 @@ function string-escape {
   (( $# )) || return 1
   local s
   for s in "$@"; do
-    echo ${(q-)s}
+    echo ${s:q}
   done
 }
 

@@ -1,16 +1,18 @@
 # string.zsh
 
-When it comes to Zsh scripting, a lot of attention is paid to files and the file system, but it's much harder to find good documentation around string manipulation. Information about Zsh strings gets buried in docs obscurely labeled [Parameter Expansion][1] or [Modifiers][2]. The [Fish Shell][fish] shell does a way better job with documentation, and has a handy [string][fish-string] command that covers most of the things you'd ever want to do with strings.
+When it comes to Zsh scripting, a lot of attention is paid to files and the file system, but it's a bit harder to find good documentation around string manipulation. Information about Zsh strings gets buried in docs obscurely labeled [Parameter Expansion][1] or [Modifiers][2]. The [Fish Shell][fish] shell does a better job with documentation, and has a handy [string][fish-string] command that covers most of the things you'd ever want to do with strings.
 
-This project aims to use Fish's `string` command to demonstrate Zsh's string handling capabilities. You don't necessarily need Fish's string commands in Zsh, but by building them we can show Zsh's capabilities, and also provide some convenience functions to aid your shell scripting journey.
+This project aims to use Fish's `string` subcommands to demonstrate Zsh's string handling capabilities. You don't necessarily need Fish's `string` subcommands in Zsh, but by scripting equivalent Zsh functions we can quickly show how Zsh accomplishes the same functionality. And, arguably, provide a nicer interface when interacting with strings in Zsh going forward to aid your shell scripting journey.
 
 ## Tests
 
+A brief note on tests:
+
 This README is validated using the excellent [clitest] testing framework. Occasionally in this doc I will need to include some testing snippets. I will try avoid them being distracting or doing tons of undocumented _magic_. This README itself is meant to contain all the actual code you need, so you should not have to go find buried tricks in other files.
 
-Here are the small handful of _magic_ things done in this doc that you might need to be aware of:
+Here are the small handful of _magic_ things done in this doc that you might want to be aware of:
 - if you see `#=> --flag` syntax, that's a thing [clitest] uses for certain kinds of tests
-- if you see the `#string.zsh` comment at the top of a code block, that code is pulled into the string.zsh file so that this project can be used as a Zsh plugin
+- if you see the `#string.zsh` comment at the top of a code block, I use that to indicate that the code block should be pulled into the string.zsh
 - if you see `##?` comments, we use those to indicate usage strings (aka: help)
 
 Tests are run using the following command:
@@ -22,15 +24,76 @@ Tests are run using the following command:
 Here we need to handle test setup.
 
 ```zsh
-% source string.zsh
+% source ./.clitests/setup.zsh
 %
 ```
 
 With that out of the way, let's begin.
 
+## Fish's `string` command
+
+If you aren't familiar with Fish's [`string`][fish-string] utility, it provides nearly 20 subcommands for dealing with strings. Here is the usage string provided when running `string --help`:
+
+```text
+string - manipulate strings
+
+string collect [-a | --allow-empty] [-N | --no-trim-newlines] [STRING ...]
+string escape [-n | --no-quoted] [--style=] [STRING ...]
+string join [-q | --quiet] [-n | --no-empty] SEP [STRING ...]
+string join0 [-q | --quiet] [STRING ...]
+string length [-q | --quiet] [STRING ...]
+string lower [-q | --quiet] [STRING ...]
+string match [-a | --all] [-e | --entire] [-i | --ignore-case]
+             [-g | --groups-only] [-r | --regex] [-n | --index]
+             [-q | --quiet] [-v | --invert]
+             PATTERN [STRING ...]
+string pad [-r | --right] [(-c | --char) CHAR] [(-w | --width) INTEGER]
+           [STRING ...]
+string repeat [(-n | --count) COUNT] [(-m | --max) MAX] [-N | --no-newline]
+              [-q | --quiet] [STRING ...]
+string replace [-a | --all] [-f | --filter] [-i | --ignore-case]
+               [-r | --regex] [-q | --quiet] PATTERN REPLACE [STRING ...]
+string shorten [(-c | --char) CHARS] [(-m | --max) INTEGER]
+               [-N | --no-newline] [-l | --left] [-q | --quiet] [STRING ...]
+string split [(-f | --fields) FIELDS] [(-m | --max) MAX] [-n | --no-empty]
+             [-q | --quiet] [-r | --right] SEP [STRING ...]
+string split0 [(-f | --fields) FIELDS] [(-m | --max) MAX] [-n | --no-empty]
+              [-q | --quiet] [-r | --right] [STRING ...]
+string sub [(-s | --start) START] [(-e | --end) END] [(-l | --length) LENGTH]
+           [-q | --quiet] [STRING ...]
+string trim [-l | --left] [-r | --right] [(-c | --chars) CHARS]
+            [-q | --quiet] [STRING ...]
+string unescape [--style=] [STRING ...]
+string upper [-q | --quiet] [STRING ...]
+```
+
+Let's quickly examine Zsh equivalents of each of these string functions:
+
+```zsh
+string collect   % arr=(${(@f)$(echo $str)})
+string escape    % echo ${str:q}
+string join      % echo ${(pj:$sep:)words}
+string length    % echo $#str
+string lower     % echo ${str:l}
+string match     % partial support via zsh/pcre
+string pad       % echo ${(l:${len}::string1::string2:)str}
+string repeat    % printf "${str}%.0s" {1..$times}
+string replace   % echo ${str:gs/pattern/${sub}/}
+string shorten   % [[ $#str -lt $len ]] && echo ${str} || echo ${str:0:((len-3))}...
+string split     % echo ${(ps:$sep:)str}
+string sub       % echo $str[$start,$end]
+string trim      % partial support via ${name%pattern} and ${name#pattern}
+string unescape  % echo ${str:Q}
+string upper     % echo ${str:u}
+```
+
+The bulk of the documentation for this syntax is found in the [Parameter Expansion][1] or [Modifiers][2] sections of the Zsh docs.
+
+We could stop right here and have a lot of what we need to know about scripting with strings in Zsh. But looking at that mess of syntax, Zsh gives the strong appearance of being a write-only language like Perl. Remembering this syntax when you need it is painful, and searching the docs can be equally frustrating. Let's spend a little time going farther down the rabbit hole, and wrap this functionality in `string` functions like Fish has.
+
 ## String lengths
 
-In Zsh you get the length of strings using the `$#var` syntax like so:
+Let's start with an easy one. In Zsh you get the length of strings using the `$#var` syntax like so:
 
 ```zsh
 % str="abcdefghijklmnopqrstuvwxyz"
@@ -39,7 +102,7 @@ In Zsh you get the length of strings using the `$#var` syntax like so:
 %
 ```
 
-Fish handles this with the [string length][string-length] command. If you like how Fish does things, you can also easily accomplish the same functionality in Zsh with a simple function:
+Fish uses the [string length][string-length] command to handle this. If you wanted the same functionality in Zsh you could write this simple function:
 
 ```zsh
 #string.zsh
@@ -53,6 +116,8 @@ function string-length {
   done
 }
 ```
+
+First, we check that arguments were provided or we return a failure status: `(( $# )) || return 1`. Next we loop through the arguments provided, preserving empty strings: `for s in "$@"`. Finally, we print out the length of each string argument: `echo $#s`. Pretty simple, right?
 
 With this function you can now get string lengths similar to how Fish does it:
 
@@ -80,20 +145,7 @@ abcdefghijklmnopqrstuvwxyz
 %
 ```
 
-If you forget and use the wrong case your string will be wrong, which is why it's better to enclose your variables in curly braces when using modifiers:
-
-```zsh
-% # EPIC FAIL EXAMPLES:
-% # modifiers without curly braces may succeed in unexpected ways
-% echo $str:U
-AbCdEfGhIjKlMnOpQrStUvWxYz:U
-% # use curly braces when using modifiers:
-% echo ${str:U}  #=> --regex unrecognized modifier
-% # zsh: unrecognized modifier `U'
-%
-```
-
-Here's how you would use [parameter expansion flags][2] to change case:
+Alternatively, here's how you use [parameter expansion flags][2] to change case:
 
 ```zsh
 % str="AbCdEfGhIjKlMnOpQrStUvWxYz"
@@ -101,20 +153,6 @@ Here's how you would use [parameter expansion flags][2] to change case:
 ABCDEFGHIJKLMNOPQRSTUVWXYZ
 % echo ${(L)str}
 abcdefghijklmnopqrstuvwxyz
-%
-```
-
-Unfortunately, if you accidentally use the wrong case when you use parameter expansion flags you're in for a surprise because the lowercase `u` is used to apply uniqueness to the result.
-
-```zsh
-% # EPIC FAIL EXAMPLES:
-% # modifiers without curly braces may succeed in unexpected ways
-% arr=(aAa bBb cCc AaA cCc)
-% echo ${(U)arr}
-AAA BBB CCC AAA CCC
-% # don't make a mistake here
-% echo ${(u)arr}
-aAa bBb cCc AaA
 %
 ```
 
@@ -157,20 +195,49 @@ abc
 %
 ```
 
+### Common mistakes
+
+If you forget and use the wrong case for your modifiers your string will be wrong, which is why it's better to enclose your variables in curly braces when using modifiers:
+
+```zsh
+% # EPIC FAIL EXAMPLES:
+% # modifiers without curly braces may succeed in unexpected ways
+% echo $str:U
+AbCdEfGhIjKlMnOpQrStUvWxYz:U
+% # use curly braces when using modifiers:
+% echo ${str:U}  #=> --regex unrecognized modifier
+% # zsh: unrecognized modifier `U'
+%
+```
+
+If you accidentally used the wrong case when you use parameter expansion flags you're in for a surprise because the lowercase `u` is used to apply uniqueness to the result.
+
+```zsh
+% # EPIC FAIL EXAMPLES:
+% # parameter expansion flags - use (U) not (u), and (L) not (l)
+% arr=(aAa bBb cCc AaA cCc)
+% echo ${(U)arr}
+AAA BBB CCC AAA CCC
+% # don't make a mistake here or it will fail successfully
+% echo ${(u)arr}
+aAa bBb cCc AaA
+%
+```
+
 ## Trimming strings
 
 Trimming strings (also known as stripping) means removing leading or trailing content from a string. Zsh only has partial support for trimming strings as we'll see.
 
-If you want to remove the leading or trailing part of a string, and you can accurately represent that leading part with a glob pattern, you can accomplish that with the `#` and `%` [parameter expansions][4].
+If you want to remove the leading or trailing part of a string, _and you can accurately represent that leading part with a simple glob pattern_, you can accomplish that with the `#` and `%` [parameter expansions][4].
 
 The `#` expansion removes from the start of the string. A single `#` removes the shortest match, while a `##` removes the longest.
 
 ```zsh
 % str="a/b/c/d/e/f/g"
-% # remove a/
+% # remove 'a/'
 % echo ${str#*/}
 b/c/d/e/f/g
-% # remove a/b/c/d/e/f/
+% # remove 'a/b/c/d/e/f/'
 % echo ${str##*/}
 g
 %
@@ -180,16 +247,16 @@ The `%` expansion removes from the end of the string. A single `%` removes the s
 
 ```zsh
 % str="a/b/c/d/e/f/g"
-% # remove /g
+% # remove '/g'
 % echo ${str%/*}
 a/b/c/d/e/f
-% # remove /b/c/d/e/f/g
+% # remove '/b/c/d/e/f/g'
 % echo ${str%%/*}
 a
 %
 ```
 
-More commonly, we often want to remove leading and trailing whitespace from a string. Once we start to get into patterns like "spaces or newlines or tabs or carriage returns" we run into trouble sticking to Zsh builtins. This is what tools like `sed` are built for. If you like Fish's [string trim][string-trim] command, and just care about trimming whitespace, we can make a trim function that wraps `sed` like this:
+More commonly, we want to remove leading and trailing whitespace from a string. Once we start to get into patterns like "spaces or newlines or tabs or carriage returns or ..." we run into trouble sticking to Zsh builtins. This is what tools like `sed` are built for. If you like Fish's [string trim][string-trim] command, and just care about trimming whitespace, we can make a trim function that wraps `sed` like this:
 
 ```zsh
 #string.zsh
@@ -206,11 +273,14 @@ function string-trim {
 Let's try out our new `string-trim` function:
 
 ```zsh
-% tab=$'\t'; nl=$'\n'
 % string-trim "  a b c  "
 a b c
+% # set tab and newline variables
+% tab=$'\t'
+% nl=$'\n'
 % string-trim "${tab}x y z${tab}"
 x y z
+% # surround results with pipes to better see that right trim is working
 % echo "|$(string-trim "  ${tab}${tab}  ${tab} a b c${tab}  ${nl}${nl} ")|"
 |a b c|
 %
@@ -218,28 +288,23 @@ x y z
 
 ## Escaping strings
 
-Strings often have characters in them that need 'escaped' or 'quoted' properly. Quoting strings is done with the [q modifier][1]. This is similar to [string escape][string-escape] in Fish.
+Strings often have characters in them that need 'escaped' or 'quoted' properly. Quoting strings is done with the [q modifier][1], and unquoting is done with the [Q modifier][1]. This is similar to [string escape][string-escape] and [string unescape][string-unescape] in Fish.
 
 ```zsh
 % str="3 tabs \t\t\t."
-% echo "${str:q}"
+% echo ${str:q}
 3\ tabs\ \t\t\t.
+% str='3 backslashes \\\\\\.'
+% echo $str
+3 backslashes \\\.
+% echo ${str:q}
+3\ backslashes\ \\\\\\.
+% echo ${${str:q}:Q}
+3 backslashes \\\.
 %
 ```
 
-You can unquote (unescape) strings with the [Q modifier][1]. This is similar to [string unescape][string-unescape] in Fish.
-
-```zsh
-% str="3 backticks \`\`\`."
-% esc="${str:q}"
-% echo $esc
-3\ backticks\ \`\`\`.
-% echo "${esc:Q}"
-3 backticks ```.
-%
-```
-
-In Zsh you can quote strings different ways using `q`, `qq`, `qqq`, `qqqq`, as well as `q-` and `q+`. Each results in different quoting output. They mean:
+In Zsh you can quote strings many different ways using `q`, `qq`, `qqq`, `qqqq`, as well as `q-` and `q+`. Each outputs different kinds of quoting:
 
 - `q`: Quote characters that are special to the shell with backslashes
 - `qq`: Quote with results in 'single' quotes
@@ -249,22 +314,22 @@ In Zsh you can quote strings different ways using `q`, `qq`, `qqq`, `qqqq`, as w
 - `q+`: Extended minimal quoting using $'dollar'
 
 ```zsh
-% strip() { sed -r 's/\x1B\[(;?[0-9]{1,3})+[mGK]//g' }
-% normal="\e[0;0m"
-% blue="\e[0;34m"
-% str="${blue}this is blue${normal}"
-% echo ${(q-)str} | strip
-'this is blue'
-% echo ${(q+)str} | strip
-'this is blue'
+% tab=$'\t'
+% str="\\\\backslash, tab (\t), and \`backticks\`."
+% echo $str
+\backslash, tab (	), and `backticks`.
 % echo ${(q)str}
-\e\[0\;34mthis\ is\ blue\e\[0\;0m
-% echo ${(qq)str} | strip
-'this is blue'
+\\backslash,\ tab\ \(\t\),\ and\ \`backticks\`.
+% echo ${(qq)str}
+'\backslash, tab (	), and `backticks`.'
 % echo ${(qqq)str}
-"\e[0;34mthis is blue\e[0;0m"
+"\\backslash, tab (\t), and \`backticks\`."
 % echo ${(qqqq)str}
-$'\e[0;34mthis is blue\e[0;0m'
+$'\\backslash, tab (\t), and `backticks`.'
+% echo ${(q-)str}
+'\backslash, tab (	), and `backticks`.'
+% echo ${(q+)str}
+'\backslash, tab (	), and `backticks`.'
 %
 ```
 
@@ -278,7 +343,7 @@ function string-escape {
   (( $# )) || return 1
   local s
   for s in "$@"; do
-    echo ${(q-)s}
+    echo ${s:q}
   done
 }
 
@@ -291,6 +356,22 @@ function string-unescape {
     echo ${s:Q}
   done
 }
+```
+
+Now we can use functions similar to Fish's for string escaping.
+
+```zsh
+% excited_man='\\o/'
+% echo $excited_man
+\o/
+% string-escape $excited_man
+\\o/
+% esc_man='\\\\o/'
+% echo $esc_man
+\\o/
+% string-unescape $esc_man
+\o/
+%
 ```
 
 ## Joining strings
